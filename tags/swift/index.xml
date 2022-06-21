@@ -1,4 +1,48 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>swift on sleepyfran's blog</title><link>https://sleepyfran.github.io/blog/tags/swift/</link><description>Recent content in swift on sleepyfran's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 21 Jun 2022 20:30:00 +0000</lastBuildDate><atom:link href="https://sleepyfran.github.io/blog/tags/swift/index.xml" rel="self" type="application/rss+xml"/><item><title>Formatters in SwiftUI</title><link>https://sleepyfran.github.io/blog/posts/swiftui-formatting/</link><pubDate>Tue, 21 Jun 2022 20:30:00 +0000</pubDate><guid>https://sleepyfran.github.io/blog/posts/swiftui-formatting/</guid><description>One of the most common issues I had with SwiftUI were always related to handling different data types inside of the Text or TextField controls, specially when handling numbers like Decimal where you&amp;rsquo;d need to manually specify a NumberFormatter with the correct settings and yada yada yada.
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>swift on sleepyfran's blog</title><link>https://sleepyfran.github.io/blog/tags/swift/</link><description>Recent content in swift on sleepyfran's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 21 Jun 2022 22:42:09 +0200</lastBuildDate><atom:link href="https://sleepyfran.github.io/blog/tags/swift/index.xml" rel="self" type="application/rss+xml"/><item><title>SwiftUI with CoreData: objectAtIndex unrecognized error</title><link>https://sleepyfran.github.io/blog/posts/swiftui-coredata-objectatindex-error/</link><pubDate>Tue, 21 Jun 2022 22:42:09 +0200</pubDate><guid>https://sleepyfran.github.io/blog/posts/swiftui-coredata-objectatindex-error/</guid><description>Ah, if it isn&amp;rsquo;t those awesome errors that make it fun to work with SwiftUI! So in retrospective this one makes sense, but if you&amp;rsquo;re like me who&amp;rsquo;s just starting out with CoreData and SwiftUI this error makes zero sense.
+In essence I was getting this error when trying to do something like this:
+2022-06-21 22:41:30.447763+0200 App[56115:1179524] -[__NSCFSet objectAtIndex:]: unrecognized selector sent to instance 0x600003df9c20 import CoreData import SwiftUI struct BudgetView: View { @FetchRequest(entity: CategoryGroup.</description><content>&lt;p>Ah, if it isn&amp;rsquo;t those awesome errors that make it fun to work with SwiftUI! So
+in retrospective this one makes sense, but if you&amp;rsquo;re like me who&amp;rsquo;s just starting
+out with CoreData and SwiftUI this error makes zero sense.&lt;/p>
+&lt;p>In essence I was getting this error when trying to do something like this:&lt;/p>
+&lt;pre tabindex="0">&lt;code>2022-06-21 22:41:30.447763+0200 App[56115:1179524] -[__NSCFSet objectAtIndex:]: unrecognized selector sent to instance 0x600003df9c20
+&lt;/code>&lt;/pre>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">CoreData&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">SwiftUI&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">BudgetView&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> categoryGroups: FetchedResults&amp;lt;CategoryGroup&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> body: some View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VStack {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> List {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(categoryGroups, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { group &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(group.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(group.categories, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { category &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(category.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>So basically I have this &lt;code>CategoryGroup&lt;/code> entity that contains a &lt;code>name&lt;/code> field
+which is a simple string (so far so good, if I just put it up until the
+&lt;code>Text(group.name)&lt;/code> it works), but it also contains the &lt;code>categories&lt;/code> field which
+is a list of the &lt;code>Category&lt;/code> entity. Accessing the &lt;code>categories&lt;/code> field gives us
+the error above.&lt;/p>
+&lt;p>I wasn&amp;rsquo;t able to find much online about &lt;em>why&lt;/em> this happens, but my guess is that
+&lt;code>ForEach&lt;/code> enumerates each of the elements of the entity using &lt;code>objectAtIndex&lt;/code>,
+however unless you&amp;rsquo;ve checked the &lt;code>Ordered&lt;/code> option in the &lt;code>Arrangement&lt;/code> section of your schema, this will fail with this error since (again, I&amp;rsquo;m guessing) the method will not be available. Don&amp;rsquo;t you love
+it when something that could have been a compile error is instead a &lt;em>right in your face&lt;/em>
+error?&lt;/p>
+&lt;p>So in order to solve this, enter in your CoreData model and go to the entity
+that contains the To Many relationship with the other entity, in my case that&amp;rsquo;s the
+&lt;code>CategoryGroup&lt;/code> entity that contains a To Many relationship to &lt;code>Category&lt;/code>. Select
+the relationship itself and on the right sidebar check the &amp;ldquo;Ordered&amp;rdquo; option:&lt;/p>
+&lt;p>&lt;img src="https://sleepyfran.github.io/blog/blog/img/swiftui-coredata-objectAtIndex-error/swiftui-coredata-objectAtIndex-error_2022-06-21-22-54-49.png" alt="Xcode showing the Ordered option in the right sidebar">&lt;/p>
+&lt;p>That will hopefully make it work. See you next time Swift decides to give us
+another nice head scratch!&lt;/p></content></item><item><title>Formatters in SwiftUI</title><link>https://sleepyfran.github.io/blog/posts/swiftui-formatting/</link><pubDate>Tue, 21 Jun 2022 20:30:00 +0000</pubDate><guid>https://sleepyfran.github.io/blog/posts/swiftui-formatting/</guid><description>One of the most common issues I had with SwiftUI were always related to handling different data types inside of the Text or TextField controls, specially when handling numbers like Decimal where you&amp;rsquo;d need to manually specify a NumberFormatter with the correct settings and yada yada yada.
 Luckily since iOS 15, iPadOS 15 and macOS 12 it&amp;rsquo;s possible to simply pass a format to the Text and TextField controls and it takes care of displaying it correctly by itself.</description><content>&lt;p>One of the most common issues I had with SwiftUI were always related to handling
 different data types inside of the &lt;code>Text&lt;/code> or &lt;code>TextField&lt;/code> controls, specially
 when handling numbers like &lt;code>Decimal&lt;/code> where you&amp;rsquo;d need to manually specify a
