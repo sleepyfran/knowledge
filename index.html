@@ -1,4 +1,63 @@
-<!doctype html><html lang=en><head><meta name=generator content="Hugo 0.101.0"><title>sleepyfran's blog</title><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content><meta name=keywords content><meta name=robots content="noodp"><link rel=canonical href=https://sleepyfran.github.io/blog/><link rel=stylesheet href=https://sleepyfran.github.io/blog/assets/style.css><link rel=stylesheet href=https://sleepyfran.github.io/blog/assets/ruber.css><link rel=apple-touch-icon href=https://sleepyfran.github.io/blog/img/apple-touch-icon-192x192.png><link rel="shortcut icon" href=https://sleepyfran.github.io/blog/img/favicon/ruber.png><meta name=twitter:card content="summary"><meta property="og:locale" content="en"><meta property="og:type" content="website"><meta property="og:title" content="sleepyfran's blog"><meta property="og:description" content><meta property="og:url" content="https://sleepyfran.github.io/blog/"><meta property="og:site_name" content="sleepyfran's blog"><meta property="og:image" content="https://sleepyfran.github.io/blog/img/favicon/ruber.png"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><link href=/blog/index.xml rel=alternate type=application/rss+xml title="sleepyfran's blog"></head><body class=ruber><div class="container headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=https://sleepyfran.github.io/blog><div class=logo>sleepyfran's blog</div></a></div></div></header><div class=content><div class=posts><div class="post on-list"><h1 class=post-title><a href=https://sleepyfran.github.io/blog/posts/hello-world/>Hello world!</a></h1><div class=post-meta><span class=post-date>2022-06-20</span>
+<!doctype html><html lang=en><head><meta name=generator content="Hugo 0.101.0"><title>sleepyfran's blog</title><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content><meta name=keywords content><meta name=robots content="noodp"><link rel=canonical href=https://sleepyfran.github.io/blog/><link rel=stylesheet href=https://sleepyfran.github.io/blog/assets/style.css><link rel=stylesheet href=https://sleepyfran.github.io/blog/assets/ruber.css><link rel=apple-touch-icon href=https://sleepyfran.github.io/blog/img/apple-touch-icon-192x192.png><link rel="shortcut icon" href=https://sleepyfran.github.io/blog/img/favicon/ruber.png><meta name=twitter:card content="summary"><meta property="og:locale" content="en"><meta property="og:type" content="website"><meta property="og:title" content="sleepyfran's blog"><meta property="og:description" content><meta property="og:url" content="https://sleepyfran.github.io/blog/"><meta property="og:site_name" content="sleepyfran's blog"><meta property="og:image" content="https://sleepyfran.github.io/blog/img/favicon/ruber.png"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><link href=/blog/index.xml rel=alternate type=application/rss+xml title="sleepyfran's blog"></head><body class=ruber><div class="container headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=https://sleepyfran.github.io/blog><div class=logo>sleepyfran's blog</div></a></div></div></header><div class=content><div class=posts><div class="post on-list"><h1 class=post-title><a href=https://sleepyfran.github.io/blog/posts/swiftui-formatting/>Formatters in SwiftUI</a></h1><div class=post-meta><span class=post-date>2022-06-21</span>
+<span class=post-author>:: sleepyfran</span></div><span class=post-tags>#<a href=https://sleepyfran.github.io/blog/tags/programming/>programming</a>&nbsp;
+#<a href=https://sleepyfran.github.io/blog/tags/swift/>swift</a>&nbsp;
+#<a href=https://sleepyfran.github.io/blog/tags/swiftui/>swiftui</a>&nbsp;</span><div class=post-content><p>One of the most common issues I had with SwiftUI were always related to handling
+different data types inside of the <code>Text</code> or <code>TextField</code> controls, specially
+when handling numbers like <code>Decimal</code> where you&rsquo;d need to manually specify a
+<code>NumberFormatter</code> with the correct settings and yada yada yada.</p><p>Luckily since iOS 15, iPadOS 15 and macOS 12 it&rsquo;s possible to simply pass a format to the <code>Text</code> and <code>TextField</code> controls and it takes care of displaying it
+correctly by itself. This means that we can, for example, create a text field
+that formats itself to display the amount in US Dollars with this little amount
+of code:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>SwiftUI</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>ContentView</span>: View {
+</span></span><span style=display:flex><span>    @State <span style=color:#66d9ef>var</span> accountBalance: Decimal = <span style=color:#ae81ff>1500.24</span>
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> body: some View {
+</span></span><span style=display:flex><span>        VStack(alignment: .center) {
+</span></span><span style=display:flex><span>            TextField(
+</span></span><span style=display:flex><span>                <span style=color:#e6db74>&#34;Enter your balance&#34;</span>,
+</span></span><span style=display:flex><span>                value: <span style=color:#960050;background-color:#1e0010>$</span>accountBalance,
+</span></span><span style=display:flex><span>                format: .currency(code: <span style=color:#e6db74>&#34;USD&#34;</span>)
+</span></span><span style=display:flex><span>            )
+</span></span><span style=display:flex><span>            .textFieldStyle(.roundedBorder)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Which displays this:
+<img src=/blog/img/swiftui-formatting/swiftui-formatting_2022-06-21-22-26-30.png alt="iOS Simulator displaying a TextField control formatting the content in US Dollars"></p><p>And of course it supports all the currency codes that you could originally put
+on a <code>NumberFormatter</code>, as easy as changing <code>USD</code> for <code>GBP</code> and we got ourselves
+a nice looking Text Field that displays its content in Pounds:</p><p><img src=/blog/img/swiftui-formatting/swiftui-formatting_2022-06-21-22-26-56.png alt="iOS Simulator displaying a TextField control formatting the content in Pounds"></p><p>This also works by using the <code>format</code> parameter in a <code>Text</code> control:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>SwiftUI</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>ContentView</span>: View {
+</span></span><span style=display:flex><span>    @State <span style=color:#66d9ef>var</span> accountBalance: Decimal = <span style=color:#ae81ff>1500.24</span>
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> body: some View {
+</span></span><span style=display:flex><span>        VStack(alignment: .center) {
+</span></span><span style=display:flex><span>            Text(accountBalance,format: .currency(code: <span style=color:#e6db74>&#34;USD&#34;</span>))
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><img src=/blog/img/swiftui-formatting/swiftui-formatting_2022-06-21-22-25-53.png alt="iOS Simulator displaying a Text control formatting the content in US Dollars"></p><p>And these shortcuts are just for the base case, if you require any more configuration
+on top of that you can use the <code>FormatStyle</code> directly and configure it to your
+liking. For example, this next snippet shows the amount formatted for US Dollars
+always displaying the sign and scaling the amount 4 times:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>SwiftUI</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>ContentView</span>: View {
+</span></span><span style=display:flex><span>    @State <span style=color:#66d9ef>var</span> accountBalance: Decimal = <span style=color:#ae81ff>1500.24</span>
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> body: some View {
+</span></span><span style=display:flex><span>        VStack(alignment: .center) {
+</span></span><span style=display:flex><span>            Text(
+</span></span><span style=display:flex><span>                accountBalance,
+</span></span><span style=display:flex><span>                format: Decimal.FormatStyle.Currency(code: <span style=color:#e6db74>&#34;USD&#34;</span>)
+</span></span><span style=display:flex><span>                    .sign(strategy: .always())
+</span></span><span style=display:flex><span>                    .scale(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span>            )
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><img src=/blog/img/swiftui-formatting/swiftui-formatting_2022-06-21-22-25-12.png alt="iOS Simulator showing a Text control formatting as explained above"></p><p>There&rsquo;s a lot of other formatters available, so simply add <code>format</code> to your control
+and try all of them out!</p></div></div><div class="post on-list"><h1 class=post-title><a href=https://sleepyfran.github.io/blog/posts/hello-world/>Hello world!</a></h1><div class=post-meta><span class=post-date>2022-06-20</span>
 <span class=post-author>:: sleepyfran</span></div><div class=post-content><p>Are we live? Mic check, mic check. So I&rsquo;m just starting to re-learn Swift and SwiftUI and since Apple&rsquo;s documentation is lacking to say the least I&rsquo;ve decided to start writing this little blog to keep everything I&rsquo;m finding. The idea is to write short articles straight to the point on how to do X and Y. Sort of like a &ldquo;knowledge graph&rdquo; but without the graph 🙂</p></div></div><div class=pagination><div class=pagination__buttons></div></div></div></div><footer class=footer><div class=footer__inner><div class=copyright><span>Powered by <a href=http://gohugo.io>Hugo</a></span>
 <span>:: Theme based on <a href=https://github.com/panr/hugo-theme-terminal>Terminal</a></span>
 <span>:: Code available on <a href=https://github.com/sleepyfran/blog>GitHub</a></span></div></div></footer><script src=https://sleepyfran.github.io/blog/assets/main.js></script>
