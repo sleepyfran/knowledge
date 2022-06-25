@@ -31,15 +31,53 @@ which is a simple string (so far so good, if I just put it up until the
 &lt;code>Text(group.name)&lt;/code> it works), but it also contains the &lt;code>categories&lt;/code> field which
 is a list of the &lt;code>Category&lt;/code> entity. Accessing the &lt;code>categories&lt;/code> field gives us
 the error above.&lt;/p>
-&lt;p>I wasn&amp;rsquo;t able to find much online about &lt;em>why&lt;/em> this happens, but my guess is that
-&lt;code>ForEach&lt;/code> enumerates each of the elements of the entity using &lt;code>objectAtIndex&lt;/code>,
-however unless you&amp;rsquo;ve checked the &lt;code>Ordered&lt;/code> option in the &lt;code>Arrangement&lt;/code> section of your schema, this will fail with this error since (again, I&amp;rsquo;m guessing) the method will not be available. Don&amp;rsquo;t you love
-it when something that could have been a compile error is instead a &lt;em>right in your face&lt;/em>
-error?&lt;/p>
-&lt;p>So in order to solve this, enter in your CoreData model and go to the entity
+&lt;p>By default all To Many relationships in CoreData use the &lt;code>NSSet&lt;/code> class, which
+unless you check the &lt;code>Ordered&lt;/code> option in the model it is not enumerable and therefore
+you get the error above. Don&amp;rsquo;t you love it when something that could have been a
+compile error is instead a &lt;em>right in your face&lt;/em> error?&lt;/p>
+&lt;h2 id="the-easy-solution">The &amp;ldquo;easy&amp;rdquo; solution&lt;/h2>
+&lt;p>In order to solve this, one solution is to enter in your CoreData model and go to the entity
 that contains the To Many relationship with the other entity, in my case that&amp;rsquo;s the
 &lt;code>CategoryGroup&lt;/code> entity that contains a To Many relationship to &lt;code>Category&lt;/code>. Select
 the relationship itself and on the right sidebar check the &amp;ldquo;Ordered&amp;rdquo; option:&lt;/p>
 &lt;p>&lt;img src="https://sleepyfran.github.io/blog/blog/img/swiftui-coredata-objectAtIndex-error/swiftui-coredata-objectAtIndex-error_2022-06-21-22-54-49.png" alt="Xcode showing the Ordered option in the right sidebar">&lt;/p>
-&lt;p>That will hopefully make it work. See you next time Swift decides to give us
-another nice head scratch!&lt;/p></content></item></channel></rss>
+&lt;p>This will allow you to enumerate the content of the relationship thus making it
+usable in the &lt;code>ForEach&lt;/code>.&lt;/p>
+&lt;h2 id="a-better-way">A better way&lt;/h2>
+&lt;p>In any case I found that interacting directly with the &lt;code>NSSet&lt;/code> class can get a bit
+complicated and we expose too much details to our UI that we shouldn&amp;rsquo;t really be
+dealing with. A better way is to add a computed variable to our model that automatically
+does the translation for us into a more usable data structure like a &lt;code>Set&lt;/code> or an
+&lt;code>Array&lt;/code> while also letting us apply a custom order. In my case I chose an array,
+ordering the elements by their ID:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">var&lt;/span> categoriesArray: [Category] {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> set = categories &lt;span style="color:#66d9ef">as&lt;/span>? Set&amp;lt;Category&amp;gt; ?? []
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">set&lt;/span>.sorted {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> $0.id &lt;span style="color:#f92672">&amp;lt;&lt;/span> $1.id
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>So that means that now instead of doing the &lt;code>ForEach&lt;/code> directly on the &lt;code>categories&lt;/code>
+property we have to use this computed one:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">CoreData&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">SwiftUI&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">BudgetView&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> categoryGroups: FetchedResults&amp;lt;CategoryGroup&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> body: some View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VStack {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> List {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(categoryGroups, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { group &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(group.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">/* The change is here */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(group.categoriesArray, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { category &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(category.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And with that we should get no more complaints and our app will run happily.&lt;/p></content></item></channel></rss>

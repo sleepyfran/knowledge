@@ -34,15 +34,48 @@ out with CoreData and SwiftUI this error makes zero sense.</p><p>In essence I wa
 which is a simple string (so far so good, if I just put it up until the
 <code>Text(group.name)</code> it works), but it also contains the <code>categories</code> field which
 is a list of the <code>Category</code> entity. Accessing the <code>categories</code> field gives us
-the error above.</p><p>I wasn&rsquo;t able to find much online about <em>why</em> this happens, but my guess is that
-<code>ForEach</code> enumerates each of the elements of the entity using <code>objectAtIndex</code>,
-however unless you&rsquo;ve checked the <code>Ordered</code> option in the <code>Arrangement</code> section of your schema, this will fail with this error since (again, I&rsquo;m guessing) the method will not be available. Don&rsquo;t you love
-it when something that could have been a compile error is instead a <em>right in your face</em>
-error?</p><p>So in order to solve this, enter in your CoreData model and go to the entity
+the error above.</p><p>By default all To Many relationships in CoreData use the <code>NSSet</code> class, which
+unless you check the <code>Ordered</code> option in the model it is not enumerable and therefore
+you get the error above. Don&rsquo;t you love it when something that could have been a
+compile error is instead a <em>right in your face</em> error?</p><h2 id=the-easy-solution>The &ldquo;easy&rdquo; solution<a href=#the-easy-solution class=hanchor arialabel=Anchor>&#8983;</a></h2><p>In order to solve this, one solution is to enter in your CoreData model and go to the entity
 that contains the To Many relationship with the other entity, in my case that&rsquo;s the
 <code>CategoryGroup</code> entity that contains a To Many relationship to <code>Category</code>. Select
-the relationship itself and on the right sidebar check the &ldquo;Ordered&rdquo; option:</p><p><img src=/blog/img/swiftui-coredata-objectAtIndex-error/swiftui-coredata-objectAtIndex-error_2022-06-21-22-54-49.png alt="Xcode showing the Ordered option in the right sidebar"></p><p>That will hopefully make it work. See you next time Swift decides to give us
-another nice head scratch!</p></div></div><div class=pagination><div class=pagination__title><span class=pagination__title-h></span><hr></div><div class=pagination__buttons><span class="button next"><a href=https://sleepyfran.github.io/blog/posts/swiftui-formatting/><span class=button__text>Formatters in SwiftUI</span>
+the relationship itself and on the right sidebar check the &ldquo;Ordered&rdquo; option:</p><p><img src=/blog/img/swiftui-coredata-objectAtIndex-error/swiftui-coredata-objectAtIndex-error_2022-06-21-22-54-49.png alt="Xcode showing the Ordered option in the right sidebar"></p><p>This will allow you to enumerate the content of the relationship thus making it
+usable in the <code>ForEach</code>.</p><h2 id=a-better-way>A better way<a href=#a-better-way class=hanchor arialabel=Anchor>&#8983;</a></h2><p>In any case I found that interacting directly with the <code>NSSet</code> class can get a bit
+complicated and we expose too much details to our UI that we shouldn&rsquo;t really be
+dealing with. A better way is to add a computed variable to our model that automatically
+does the translation for us into a more usable data structure like a <code>Set</code> or an
+<code>Array</code> while also letting us apply a custom order. In my case I chose an array,
+ordering the elements by their ID:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>var</span> categoriesArray: [Category] {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> set = categories <span style=color:#66d9ef>as</span>? Set&lt;Category&gt; ?? []
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>set</span>.sorted {
+</span></span><span style=display:flex><span>        $0.id <span style=color:#f92672>&lt;</span> $1.id
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>So that means that now instead of doing the <code>ForEach</code> directly on the <code>categories</code>
+property we have to use this computed one:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>CoreData</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>SwiftUI</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>BudgetView</span>: View {
+</span></span><span style=display:flex><span>    @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> categoryGroups: FetchedResults&lt;CategoryGroup&gt;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> body: some View {
+</span></span><span style=display:flex><span>        VStack {
+</span></span><span style=display:flex><span>            List {
+</span></span><span style=display:flex><span>                ForEach(categoryGroups, id: <span style=color:#960050;background-color:#1e0010>\</span>.id) { group <span style=color:#66d9ef>in</span>
+</span></span><span style=display:flex><span>                    Text(group.name)
+</span></span><span style=display:flex><span>                    
+</span></span><span style=display:flex><span>                    <span style=color:#75715e>/* The change is here */</span>
+</span></span><span style=display:flex><span>                    ForEach(group.categoriesArray, id: <span style=color:#960050;background-color:#1e0010>\</span>.id) { category <span style=color:#66d9ef>in</span>
+</span></span><span style=display:flex><span>                        Text(category.name)
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>And with that we should get no more complaints and our app will run happily.</p></div></div><div class=pagination><div class=pagination__title><span class=pagination__title-h></span><hr></div><div class=pagination__buttons><span class="button next"><a href=https://sleepyfran.github.io/blog/posts/swiftui-formatting/><span class=button__text>Formatters in SwiftUI</span>
 <span class=button__icon>→</span></a></span></div></div></div></div><footer class=footer><div class=footer__inner><div class=copyright><span>Powered by <a href=http://gohugo.io>Hugo</a></span>
 <span>:: Theme based on <a href=https://github.com/panr/hugo-theme-terminal>Terminal</a></span>
 <span>:: Code available on <a href=https://github.com/sleepyfran/blog>GitHub</a></span></div></div></footer><script src=https://sleepyfran.github.io/blog/assets/main.js></script>
