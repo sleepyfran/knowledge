@@ -55,18 +55,67 @@ which is a simple string (so far so good, if I just put it up until the
 is a list of the `Category` entity. Accessing the `categories` field gives us
 the error above.
 
-I wasn't able to find much online about _why_ this happens, but my guess is that
-`ForEach` enumerates each of the elements of the entity using `objectAtIndex`,
-however unless you've checked the `Ordered` option in the `Arrangement` section of your schema, this will fail with this error since (again, I'm guessing) the method will not be available. Don't you love
-it when something that could have been a compile error is instead a _right in your face_
-error?
+By default all To Many relationships in CoreData use the `NSSet` class, which
+unless you check the `Ordered` option in the model it is not enumerable and therefore
+you get the error above. Don't you love it when something that could have been a
+compile error is instead a _right in your face_ error?
 
-So in order to solve this, enter in your CoreData model and go to the entity
+## The "easy" solution
+
+In order to solve this, one solution is to enter in your CoreData model and go to the entity
 that contains the To Many relationship with the other entity, in my case that's the
 `CategoryGroup` entity that contains a To Many relationship to `Category`. Select
 the relationship itself and on the right sidebar check the "Ordered" option:
 
 ![Xcode showing the Ordered option in the right sidebar](/blog/img/swiftui-coredata-objectAtIndex-error/swiftui-coredata-objectAtIndex-error_2022-06-21-22-54-49.png)
 
-That will hopefully make it work. See you next time Swift decides to give us
-another nice head scratch!
+This will allow you to enumerate the content of the relationship thus making it
+usable in the `ForEach`.
+
+## A better way
+
+In any case I found that interacting directly with the `NSSet` class can get a bit
+complicated and we expose too much details to our UI that we shouldn't really be
+dealing with. A better way is to add a computed variable to our model that automatically
+does the translation for us into a more usable data structure like a `Set` or an
+`Array` while also letting us apply a custom order. In my case I chose an array,
+ordering the elements by their ID:
+
+```swift
+public var categoriesArray: [Category] {
+    let set = categories as? Set<Category> ?? []
+    return set.sorted {
+        $0.id < $1.id
+    }
+}
+```
+
+So that means that now instead of doing the `ForEach` directly on the `categories`
+property we have to use this computed one:
+
+```swift
+import CoreData
+import SwiftUI
+
+struct BudgetView: View {
+    @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+    var categoryGroups: FetchedResults<CategoryGroup>
+    
+    var body: some View {
+        VStack {
+            List {
+                ForEach(categoryGroups, id: \.id) { group in
+                    Text(group.name)
+                    
+                    /* The change is here */
+                    ForEach(group.categoriesArray, id: \.id) { category in
+                        Text(category.name)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+And with that we should get no more complaints and our app will run happily.
