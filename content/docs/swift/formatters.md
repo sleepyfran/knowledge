@@ -43,10 +43,6 @@ Using the `relative` parameter, we can get how long it's been in a relative fash
 Date.now.addingTimeInterval(-15000).formatted(
     .relative(presentation: .numeric)
 ) // "4 hours ago"
-
-Date.now.addingTimeInterval(-15000).formatted(
-    .relative(presentation: .numeric)
-)
 ```
 
 ### Date ranges
