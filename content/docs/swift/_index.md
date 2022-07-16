@@ -1,6 +1,6 @@
 ---
 weight: 20
-title: "Swift"
+title: "Swift/SwiftUI"
 bookFlatSection: true
 ---
 
