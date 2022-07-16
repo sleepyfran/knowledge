@@ -1,0 +1,38 @@
+@media screen and (min-width: $mobile-breakpoint) {
+    .book-brand > a::after {
+        content: "";
+        display: inline-block;
+        background-color: black;
+        vertical-align: top;
+        width: 15px;
+        height: 21px;
+        margin-top: 23px;
+        margin-right: 35px;
+        -webkit-animation: blink 1s step-end infinite;
+        animation: blink 1s step-end infinite;
+    }
+}
+
+@-webkit-keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
