@@ -1,0 +1,63 @@
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Unrecognized selector objectAtIndex # 2022-06-21 22:41:30.447763+0200 App[56115:1179524] -[__NSCFSet objectAtIndex:]: unrecognized selector sent to instance 0x600003df9c20 This happened with the following code, basically when trying to do a ForEach on a property coming from a CoreData model:
+import CoreData import SwiftUI struct BudgetView: View { @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: []) var categoryGroups: FetchedResults<CategoryGroup> var body: some View { VStack { List { ForEach(categoryGroups, id: \.id) { group in Text(group.name) ForEach(group.categories, id: \."><meta name=theme-color content="#FFFFFF"><meta name=color-scheme content="light dark"><meta property="og:title" content="Unrecognized selector `objectAtIndex`"><meta property="og:description" content="Unrecognized selector objectAtIndex # 2022-06-21 22:41:30.447763+0200 App[56115:1179524] -[__NSCFSet objectAtIndex:]: unrecognized selector sent to instance 0x600003df9c20 This happened with the following code, basically when trying to do a ForEach on a property coming from a CoreData model:
+import CoreData import SwiftUI struct BudgetView: View { @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: []) var categoryGroups: FetchedResults<CategoryGroup> var body: some View { VStack { List { ForEach(categoryGroups, id: \.id) { group in Text(group.name) ForEach(group.categories, id: \."><meta property="og:type" content="article"><meta property="og:url" content="https://sleepyfran.github.io/knowledge/docs/swift/coredata/errors-and-gotchas/unrecognized-selector-objectatindex/"><meta property="article:section" content="docs"><title>Unrecognized selector `objectAtIndex` | 🌻 sleepyfran's knowledge garden</title><link rel=manifest href=/knowledge/manifest.json><link rel=icon href=/knowledge/favicon.png type=image/x-icon><link rel=stylesheet href=/knowledge/book.min.80d6922968880556b89712a94dd02df5a4ec7fc7b1be382380a04bd85608106f.css integrity="sha256-gNaSKWiIBVa4lxKpTdAt9aTsf8exvjgjgKBL2FYIEG8=" crossorigin=anonymous><script defer src=/knowledge/flexsearch.min.js></script>
+<script defer src=/knowledge/en.search.min.2b071a115e7941e282efa503f2b53e549bda2972e354f5f77f587615849ffbf2.js integrity="sha256-KwcaEV55QeKC76UD8rU+VJvaKXLjVPX3f1h2FYSf+/I=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/knowledge/><span>🌻 sleepyfran's knowledge garden</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li class=book-section-flat><span>Swift</span><ul><li><input type=checkbox id=section-16824cb524d7caeeba576480480ee803 class=toggle checked>
+<label for=section-16824cb524d7caeeba576480480ee803 class="flex justify-between"><a role=button>CoreData</a></label><ul><li><input type=checkbox id=section-183e10b1bd1a83dc21e010b2a7944e96 class=toggle checked>
+<label for=section-183e10b1bd1a83dc21e010b2a7944e96 class="flex justify-between"><a role=button>Errors and gotchas</a></label><ul><li><a href=/knowledge/docs/swift/coredata/errors-and-gotchas/unrecognized-selector-objectatindex/ class=active>Unrecognized selector `objectAtIndex`</a></li></ul></li></ul></li><li><a href=/knowledge/docs/swift/formatters/>Formatters</a></li></ul></li></ul><ul><li><a href=https://github.com/sleepyfran target=_blank rel=noopener>My Github</a></li><li><a href=https://github.com/sleepyfran/knowledge target=_blank rel=noopener>Page's repo</a></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/knowledge/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>Unrecognized selector `objectAtIndex`</strong>
+<label for=toc-control><img src=/knowledge/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents></nav></aside></header><article class=markdown><h1 id=unrecognized-selector-objectatindex>Unrecognized selector <code>objectAtIndex</code>
+<a class=anchor href=#unrecognized-selector-objectatindex>#</a></h1><pre tabindex=0><code>2022-06-21 22:41:30.447763+0200 App[56115:1179524] -[__NSCFSet objectAtIndex:]: unrecognized selector sent to instance 0x600003df9c20
+</code></pre><p>This happened with the following code, basically when trying to do a <code>ForEach</code> on a property coming from a CoreData model:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>CoreData</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>SwiftUI</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>BudgetView</span>: View {
+</span></span><span style=display:flex><span>    @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> categoryGroups: FetchedResults&lt;CategoryGroup&gt;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> body: some View {
+</span></span><span style=display:flex><span>        VStack {
+</span></span><span style=display:flex><span>            List {
+</span></span><span style=display:flex><span>                ForEach(categoryGroups, id: <span style=color:#960050;background-color:#1e0010>\</span>.id) { group <span style=color:#66d9ef>in</span>
+</span></span><span style=display:flex><span>                    Text(group.name)
+</span></span><span style=display:flex><span>                    
+</span></span><span style=display:flex><span>                    ForEach(group.categories, id: <span style=color:#960050;background-color:#1e0010>\</span>.id) { category <span style=color:#66d9ef>in</span>
+</span></span><span style=display:flex><span>                        Text(category.name)
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This property is actually declared manually as an array:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>CategoryGroup</span>: NSManagedObject, Identifiable {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>@NSManaged</span> <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>var</span> categories: [Category]
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>But even though <em>I</em> declared it as an array apparently the underlying type that CoreData actually puts there is an <code>NSSet</code>, which by default does not allow to retrieve stuff by its index (does that unrecognized selector <code>objectAtIndex</code> makes a bit more sense now?)</p><p>The easy solution is to mark the property as &ldquo;Ordered&rdquo; in the CoreData model. The <strong>proper</strong> solution, however, is to not interact with <code>NSSet</code> directly unless we can avoid it, so we can simply introduce a computed variable that transforms our property into an array (or whatever other data type we need!):</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>var</span> categoriesArray: [Category] {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> set = categories <span style=color:#66d9ef>as</span>? Set&lt;Category&gt; ?? []
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>set</span>.sorted {
+</span></span><span style=display:flex><span>        $0.id <span style=color:#f92672>&lt;</span> $1.id
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This casts the <code>NSSet</code> into an array sorting it by their ID. Now instead of doing the <code>ForEach</code> directly on the <code>categories</code> property we have to use this computed one:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>CoreData</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>SwiftUI</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>BudgetView</span>: View {
+</span></span><span style=display:flex><span>    @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> categoryGroups: FetchedResults&lt;CategoryGroup&gt;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>var</span> body: some View {
+</span></span><span style=display:flex><span>        VStack {
+</span></span><span style=display:flex><span>            List {
+</span></span><span style=display:flex><span>                ForEach(categoryGroups, id: <span style=color:#960050;background-color:#1e0010>\</span>.id) { group <span style=color:#66d9ef>in</span>
+</span></span><span style=display:flex><span>                    Text(group.name)
+</span></span><span style=display:flex><span>                    
+</span></span><span style=display:flex><span>                    <span style=color:#75715e>/* The change is here */</span>
+</span></span><span style=display:flex><span>                    ForEach(group.categoriesArray, id: <span style=color:#960050;background-color:#1e0010>\</span>.id) { category <span style=color:#66d9ef>in</span>
+</span></span><span style=display:flex><span>                        Text(category.name)
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div></article><footer class=book-footer><div class="flex flex-wrap justify-between"></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents></nav></div></aside></main></body></html>
