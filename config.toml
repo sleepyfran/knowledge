@@ -1,19 +1,8 @@
-baseURL = "https://sleepyfran.github.io/knowledge"
-languageCode = "en-us"
-title = "🌻 sleepyfran's knowledge garden"
-theme = "hugo-book"
+baseURL = 'https://sleepyfran.github.io/blog'
+languageCode = 'en-us'
+title = "sleepyfran's blog"
+theme = 'terminal'
 
 [params]
-  BookTheme = "auto"
-
-[menu]
-  # [[menu.before]]
-  [[menu.after]]
-    name = "My Github"
-    url = "https://github.com/sleepyfran"
-    weight = 10
-
-  [[menu.after]]
-    name = "Page's repo"
-    url = "https://github.com/sleepyfran/knowledge"
-    weight = 20
+  contentTypeName = "posts"
+  themeColor = "ruber"
