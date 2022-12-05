@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>gotchas on sleepyfran's blog</title><link>https://sleepyfran.github.io/blog/tags/gotchas/</link><description>Recent content in gotchas on sleepyfran's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 21 Jun 2022 11:43:39 +0200</lastBuildDate><atom:link href="https://sleepyfran.github.io/blog/tags/gotchas/index.xml" rel="self" type="application/rss+xml"/><item><title>Unrecognized selector `objectAtIndex`</title><link>https://sleepyfran.github.io/blog/posts/swift/coredata/unrecognized-selector-objectatindex/</link><pubDate>Tue, 21 Jun 2022 11:43:39 +0200</pubDate><guid>https://sleepyfran.github.io/blog/posts/swift/coredata/unrecognized-selector-objectatindex/</guid><description>Unrecognized selector objectAtIndex 2022-06-21 22:41:30.447763+0200 App[56115:1179524] -[__NSCFSet objectAtIndex:]: unrecognized selector sent to instance 0x600003df9c20 This happened with the following code, basically when trying to do a ForEach on a property coming from a CoreData model:
+import CoreData import SwiftUI struct BudgetView: View { @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: []) var categoryGroups: FetchedResults&amp;lt;CategoryGroup&amp;gt; var body: some View { VStack { List { ForEach(categoryGroups, id: \.id) { group in Text(group.name) ForEach(group.categories, id: \.id) { category in Text(category.</description><content>&lt;h1 id="unrecognized-selector-objectatindex">Unrecognized selector &lt;code>objectAtIndex&lt;/code>&lt;/h1>
+&lt;pre tabindex="0">&lt;code>2022-06-21 22:41:30.447763+0200 App[56115:1179524] -[__NSCFSet objectAtIndex:]: unrecognized selector sent to instance 0x600003df9c20
+&lt;/code>&lt;/pre>&lt;p>This happened with the following code, basically when trying to do a &lt;code>ForEach&lt;/code> on a property coming from a CoreData model:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">CoreData&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">SwiftUI&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">BudgetView&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> categoryGroups: FetchedResults&amp;lt;CategoryGroup&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> body: some View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VStack {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> List {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(categoryGroups, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { group &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(group.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(group.categories, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { category &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(category.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>This property is actually declared manually as an array:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">final&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">CategoryGroup&lt;/span>: NSManagedObject, Identifiable {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">@NSManaged&lt;/span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">var&lt;/span> categories: [Category]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>But even though &lt;em>I&lt;/em> declared it as an array apparently the underlying type that CoreData actually puts there is an &lt;code>NSSet&lt;/code>, which by default does not allow to retrieve stuff by its index (does that unrecognized selector &lt;code>objectAtIndex&lt;/code> makes a bit more sense now?)&lt;/p>
+&lt;p>The easy solution is to mark the property as &amp;ldquo;Ordered&amp;rdquo; in the CoreData model. The &lt;strong>proper&lt;/strong> solution, however, is to not interact with &lt;code>NSSet&lt;/code> directly unless we can avoid it, so we can simply introduce a computed variable that transforms our property into an array (or whatever other data type we need!):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">var&lt;/span> categoriesArray: [Category] {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> set = categories &lt;span style="color:#66d9ef">as&lt;/span>? Set&amp;lt;Category&amp;gt; ?? []
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">set&lt;/span>.sorted {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> $0.id &lt;span style="color:#f92672">&amp;lt;&lt;/span> $1.id
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>This casts the &lt;code>NSSet&lt;/code> into an array sorting it by their ID. Now instead of doing the &lt;code>ForEach&lt;/code> directly on the &lt;code>categories&lt;/code> property we have to use this computed one:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">CoreData&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">SwiftUI&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">BudgetView&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @FetchRequest(entity: CategoryGroup.entity(), sortDescriptors: [])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> categoryGroups: FetchedResults&amp;lt;CategoryGroup&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">var&lt;/span> body: some View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> VStack {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> List {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(categoryGroups, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { group &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(group.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">/* The change is here */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(group.categoriesArray, id: &lt;span style="color:#960050;background-color:#1e0010">\&lt;/span>.id) { category &lt;span style="color:#66d9ef">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(category.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></content></item></channel></rss>
