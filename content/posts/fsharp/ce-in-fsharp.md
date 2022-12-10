@@ -62,16 +62,12 @@ So are you wondering how we can do something like this? Well, wonder no more, le
 Let's start by defining how we want our DSL to look like. We need to be able to declare two simple things: slides and decks. Slides will represent one individual slide inside of our presentation, while our deck will be the presentation itself and should hold all the slides. Let's get our domain defined:
 
 ```fsharp
-open Avalonia.FuncUI.Types
+type Slide = { Header: string }
 
-type SlideContent = IView
-type Slide = SlideContent list
 type Deck = { Title: string; Slides: Slide list }
 ```
 
-We'll be using the types defined on Avalonia directly because slides don't really need any other abstraction: we'll simply define our DSL as custom operations in the computation expression and transform that in each method to an actual view that we can then pass into Avalonia.
-
-For the deck, though, we'll just have a title (which we'll use to populate the title of the window) and a list of slides that define the presentation.
+We'll start by defining simple types that we can expand upon later. First, our slides will consist of a list of _content_, which can be anything that can be displayed inside of a slide. We'll start by just supporting a header, but we can always expand it later given that we're defining a union type. For the deck, we'll have a title field which will be the initial view displayed once we load the deck into the program.
 
 # Implementing our DSL
 
@@ -82,8 +78,7 @@ type SlideBuilder() =
     member inline _.Yield(()) = ()
 
     [<CustomOperation("header")>]
-    member inline _.Header((), title: string) : Slide =
-        [ TextBlock.create [ TextBlock.text title ] :> IView ]
+    member inline _.Header((), header: string) : Slide = { Header = header }
 
 let slide = SlideBuilder()
 ```
@@ -190,7 +185,7 @@ type DeckBuilder() =
     member inline _.Delay(f: unit -> DeckProperty) = [f ()]
     
     member inline _.Combine(newProp: DeckProperty, previousProps: DeckProperty list) =
-      previousProps @ [ newProp ]
+        newProp :: previousProps
 
     (* ... *)
         
@@ -210,6 +205,8 @@ It might look like a bunch of changes but it's easier than it looks. We've just:
 - Changed the `Combine` method to take a list as the second parameter, so that we can accept all the previous properties that were added in the deck. That way we can append the new one to all the previous props.
 - Created a new `Run` method that takes a list instead of a single property, and uses the previously defined one to fold the list of properties into one single deck. This is the method that will get called when the expression finishes, so that we don't have to do the folding later on.
 
+You might be thinking now "does he not know that appending means putting the value at the end of the list and :: definitely does not do that?". Yes, I do! However keep in mind that expressions are evaluated from the bottom up, which means that we'll be combining the last value _first_ and only afterwards the rest, so that's why pre-pending values actually appends them to the end of the list in the end.
+
 With this we can add multiple `slide` expressions inside of our deck without having to yield anything, cool! However there's one big gap: we can't add our previously defined `title` and then add slides, we get the following error:
 
 > This control construct may only be used if the computation expression builder defines a 'For' method
@@ -220,10 +217,12 @@ So let's do that now!
 type DeckBuilder() =
     (* ... *)
     member inline _.For(prop: DeckProperty, f: unit -> DeckProperty list) =
-      [ prop ] @ f ()
+      prop :: f()
 ```
 
-In the docs they specify that the signature for `For` is `seq<'T> * ('T -> M<'U>) -> seq<M<'U>>`, however that does not force us to specify the first argument as a sequence since in our case we just have one property and we want to combine it with any function that returns a list of decks. And would you look at that, it works!
+In the docs they specify that the signature for `For` is `seq<'T> * ('T -> M<'U>) -> seq<M<'U>>`, however that does not force us to specify the first argument as a sequence, it could be any "wrapped type" of T and since in our case we just have one property and we want to combine it with any function that returns a list of decks, we can just use a single property. As with `Combine`, keep in mind that expressions are evaluated from the bottom up, which is why we can prepend the new value to the previous ones.
+
+And would you look at that, it works!
 
 ```fsharp
 deck {
@@ -247,7 +246,9 @@ So that concludes our DSL, now let's go over the second part which is actually d
 
 # A brief introduction to Avalonia.FuncUI
 
-For the UI part we'll use Avalonia, specifically [FuncUI](https://github.com/fsprojects/Avalonia.FuncUI) which is a more functional-friendly way of creating UIs using Avalonia and F#. Since we already have a project set-up let's just quickly get an app running, starting with the dependencies, we need the following ones:
+For the UI part we'll use Avalonia, specifically [FuncUI](https://github.com/fsprojects/Avalonia.FuncUI) which is a more functional-friendly way of creating UIs using Avalonia and F#. I won't get into details of the hows and whys of FuncUI, so if you want to learn more feel free to check out the repo linked above!
+
+Since we already have a project set-up let's just quickly get an app running, starting with the dependencies, we need the following ones:
 
 ```xml
 <PackageReference Include="Avalonia" Version="11.0.0-preview3" />
@@ -317,3 +318,140 @@ deck {
 ```
 
 ![A screenshot of the app running with just a title saying "A test"](/blog/img/ce-in-fsharp/initial-app-running.png)
+
+Let's move this first slide to its own component and start the process of handling more slides. I'll declare a state which holds the current slide and use it on the root component. I'll also declare a separate component for the initial slide where I just display a big text with the title of the slide centered in the screen. We'll declare the current slide as a separate type to have a clear separation between what's the initial slide and an actual slide that the user created instead of having to do tricks with the indexes of the slides:
+
+```fsharp
+type private CurrentSlide =
+    | Initial
+    | Slide of index: int
+
+type private GlobalState = { CurrentSlide: IWritable<CurrentSlide> }
+let state = { CurrentSlide = new State<CurrentSlide>(Initial) }
+
+let initialSlide deck =
+    Component.create (
+        "initial-slide",
+        fun _ ->
+            StackPanel.create [
+                StackPanel.horizontalAlignment HorizontalAlignment.Center
+                StackPanel.verticalAlignment VerticalAlignment.Center
+                StackPanel.children [
+                    TextBlock.create [
+                        TextBlock.fontSize 72
+                        TextBlock.fontWeight FontWeight.Bold
+                        TextBlock.text deck.Title
+                    ]
+                ]
+            ]
+    )
+
+let private root deck =
+    Component(fun ctx ->
+        let currentSlide = ctx.usePassedRead state.CurrentSlide
+        
+        match currentSlide.Current with
+        | Initial -> initialSlide deck
+        | _ -> failwith "Coming soon!"
+    )
+```
+
+The reason for declaring a global state instead of one scoped to the root view is that Avalonia by default listens to key events in the whole application window and if we want to listen to events inside of one component, we have to manually focus it. So let's just declare our state globally and modify it from the window.
+
+We obviously have a couple of holes to fill in our implementation, so let's do that now!
+
+## Keyboard navigation
+
+Let's start by just displaying a mocked slide that will display its index so that we can get navigation working and then we can worry about actually displaying what the user chose. We'll assign the component the _slide-x_ ID so that FuncUI can [properly detect changes between the slides](https://funcui.avaloniaui.net/components/component-lifetime#component-identity-key):
+
+```fsharp
+let private slide (index: int) slide =
+    Component.create(
+        $"slide-{index}",
+        fun _ ->
+            TextBlock.create [
+                TextBlock.text $"Slide number {index}"
+            ]
+    ) :> IView
+
+(* ... *)
+
+let private root deck =
+    Component(fun ctx ->
+        (* ... *)
+        
+        match currentSlide.Current with
+        | Initial -> initialSlide deck
+        | Slide idx ->
+            deck.Slides
+            |> List.item idx
+            |> slide idx
+    )
+```
+
+If we change the initial state to one of the slides, we'll see a simple slide displaying its index. Cool! Now that we have that in place we can implement navigation between slides with the keyboard. For that let's modify the MainWindow declaration to add a key down handler:
+
+```fsharp
+let hasSlideAvailableIn idx slides =
+    slides
+    |> List.tryItem idx
+    |> Option.isSome
+
+type MainWindow(deck: Deck) as this =
+    (* ... *)
+
+    override this.OnKeyDown event =
+        let current = state.CurrentSlide.Current
+            
+        match current, event.Key with
+        | Slide 0, Key.Left ->
+            (* Go back to the initial slide *)
+            Initial
+        | Initial, Key.Right when List.isEmpty deck.Slides |> not ->
+            (* Go to the first slide (if any) *)
+            Slide 0
+        | Slide index, Key.Left when deck.Slides |> hasSlideAvailableIn (index - 1) ->
+            (* Go to the previous slide (if any) *)
+            index - 1 |> Slide
+        | Slide index, Key.Right when deck.Slides |> hasSlideAvailableIn (index + 1) ->
+            (* Go to the next slide (if any) *)
+            index + 1 |> Slide
+        | _ -> current
+        |> state.CurrentSlide.Set
+```
+
+I love how succinct pattern matching can be when combined with tuples! There's a bit of logic required to not go out of bounds from the list and also to handle the initial slide gracefully, so we basically pattern match through all the possibilities: 
+
+- Pressing the right key while on the initial slide should go to the first slide of the presentation if there's any.
+- Pressing right when there's more slides in the presentation should advance the current slide.
+- Pressing left when there's still slides before the current one should go back to the previous.
+- Pressing left when we're in the first user-declared slide should go back to the initial.
+- Otherwise, keep it as it is.
+
+I've abstracted the "if any" slide in a separate function to make the match easier to read. So now we can navigate between all our slides, awesome! Let's go and display the slides now.
+
+## Displaying the actual slides
+
+The only thing left is displaying the actual content of the slides instead of the mocked ones we created before. Since we only support the header we have it easy:
+
+```fsharp
+let private slide (index: int) slide =
+    Component.create(
+        $"slide-{index}",
+        fun _ ->
+            StackPanel.create [
+               StackPanel.children [
+                   if System.String.IsNullOrEmpty slide.Header |> not then
+                       TextBlock.create [
+                           TextBlock.fontSize 48
+                           TextBlock.fontWeight FontWeight.Bold
+                           TextBlock.text slide.Header
+                       ]
+               ]
+            ]
+    ) :> IView
+```
+
+And there we go, it works!
+
+![A video recording of the app showing three slides that read "SharpPoint: Presentations made sharper" as the title, "This is the first slide", "...Wow, this is the second" and "NO WAY, a third?!"](/blog/img/ce-in-fsharp/slides-app.gif)
