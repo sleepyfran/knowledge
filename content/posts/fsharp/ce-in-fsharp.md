@@ -15,7 +15,7 @@ Computation expressions (CEs from now on) are those things that sound so scary w
 
 > Computation expressions in F# provide a convenient syntax for writing computations that can be sequenced and combined using control flow constructs and bindings. Depending on the kind of computation expression, they can be thought of as a way to express monads, monoids, monad transformers, and applicative functors.
 
-But once you get the hang of it, it could be a wonderful way to explore the many different ways by which you can create DSL or Domain Specific Languages in F#. In this post I'll go over some of the nicest DSL I've found so far in F# and we'll create our own that, inspired by [DeckUI](https://github.com/joshdholtz/DeckUI), will kick an [Avalonia](https://avaloniaui.net/) application that shows a presentation.
+But once you get the hang of it, it could be a wonderful way to explore the many different ways by which you can create DSL or Domain Specific Languages in F#. In this post I'll go (in a somehow chaotic manner) over some of the nicest DSL I've found so far in F# and we'll create our own that, inspired by [DeckUI](https://github.com/joshdholtz/DeckUI), will kick an [Avalonia](https://avaloniaui.net/) application that shows a presentation.
 
 # First, some prior art
 
@@ -59,6 +59,8 @@ So are you wondering how we can do something like this? Well, wonder no more, le
 
 # Defining our domain
 
+> Psst, in case you'd like to see the entire code, it's posted [here](https://github.com/sleepyfran/sharp-point)
+
 Let's start by defining how we want our DSL to look like. We need to be able to declare two simple things: slides and decks. Slides will represent one individual slide inside of our presentation, while our deck will be the presentation itself and should hold all the slides. Let's get our domain defined:
 
 ```fsharp
@@ -67,11 +69,11 @@ type Slide = { Header: string }
 type Deck = { Title: string; Slides: Slide list }
 ```
 
-We'll start by defining simple types that we can expand upon later. First, our slides will consist of a list of _content_, which can be anything that can be displayed inside of a slide. We'll start by just supporting a header, but we can always expand it later given that we're defining a union type. For the deck, we'll have a title field which will be the initial view displayed once we load the deck into the program.
+We'll start by defining simple types that we can expand upon later. We'll start by just supporting a header in the slides, but we can always expand it later. For the deck, we'll have a title field which will be the initial view displayed once we load the deck into the program, and a list of slides as defined above..
 
 # Implementing our DSL
 
-With this we can start defining our first computation expression: a slide. For now let's just add a `header` operation that will represent a header inside of a slide later on:
+With this we can start defining our first computation expression: a slide. Let's add a `header` operation that will represent a header inside of a slide later on:
 
 ```fsharp
 type SlideBuilder() =
@@ -93,7 +95,7 @@ slide {
 }
 ```
 
-And if we actually consume the result of the expression we will see that it's a list with one element, the TextBlock we used before. Cool, so far so good! We will be adding more stuff to the slides later, but let's now try to define a DSL for the deck itself. As we defined previously, our deck should have two parts: a title for the deck and a list of slides that we will show. Let's start with the title since it's the easy part.
+And if we actually consume the result of the expression we will see that it's a record with the Header field set to what we passed to the operation. Cool, so far so good! We will be adding more stuff to the slides later, but let's now try to define a DSL for the deck itself. As we defined previously, our deck should have two parts: a title for the deck and a list of slides that we will show. Let's start with the title since it's the easy part.
 
 ```fsharp
 [<RequireQualifiedAccess>]
@@ -110,7 +112,7 @@ type DeckBuilder() =
 let deck = DeckBuilder()
 ```
 
-We will start by defining a `DeckProperty` union type which will hold all the different content that a deck can accept. So far we only accept a title, so a simple branch of a string is all we need for now. We then define a yield that takes a unit and returns a unit, just like in the previous expression. The `title` custom operation simply produces a value of `Title` with the given string and then all that's left is defining a `Run` method that takes a prop and produces our domain Deck type.
+We will start by defining a `DeckProperty` union type which will hold all the different content that a deck can accept. So far we only accept a title, so a simple case of a string is all we need for now. We then define a yield that takes a unit and returns a unit, just like in the previous expression. The `title` custom operation simply produces a value of `Title` with the given string and then all that's left is defining a `Run` method that takes a prop and produces our domain Deck type, since this is the method that will be run right after our expression finishes, so we can use it to transform the property into our domain record.
 
 Cool! Trying out our expression so far produces a Deck type with no slides and "Test Deck" as the title:
 
@@ -120,7 +122,7 @@ deck {
 }
 ```
 
-Now, what about if we want to support a `slide` inside of our `deck`? Can we do that? Let's try out, let's add the previously defined slide inside of our deck and see what happens:
+Now, what about if we want to support a `slide` inside of our `deck`? Can we do that? Let's try it out, let's add the previously defined slide inside of our deck and see what happens:
 
 ```fsharp
 deck {
@@ -157,7 +159,7 @@ type DeckBuilder() =
 
 By extending our union of properties and adding a `Yield` method that accepts a slide and extending the `Run` method to support slides, we can now run the code defined above by adding `yield` before the `slide` expression, and it works as well, but that's not what we want! We want to be able to add expressions without having to yield them.
 
-In order to do so, we need to implement another method call `Delay`, whose signature is `(unit -> M<'T>) -> M<'T>`, which in our case would mean that given any function that takes a unit and returns a known wrapped type (like a slide!) we can turn it into our `DeckProperty` type. We will also define `Combine`, whose signature is `M<'T> * M<'T> -> M<'T>`, which is basically merging two properties together in our case: 
+In order to do so, we need to implement another method call `Delay`, whose signature is `(unit -> M<'T>) -> M<'T>`, which in our case would mean that given any function that takes a unit and returns a known wrapped type (like a slide!) we can turn it into our `DeckProperty` type. We will also define `Combine`, whose signature is `M<'T> * M<'T> -> M<'T>`, which is basically merging two properties together in our case, which we need to support declaring multiple properties inside of the DSL (like a title and a slide or just multiple slides): 
 
 ```fsharp
 type DeckBuilder() =
@@ -172,12 +174,6 @@ type DeckBuilder() =
 Now you might be looking at that combine and thinking "aren't we basically discarding what was previously there?" and you're absolutely right, if we try to add two `slides` inside of the deck only the latest one will get to stay and the other one will be discarded. Let's fix this by producing a list of properties instead of just one single property:
 
 ```fsharp
-let firstDefined str1 str2 =
-    if System.String.IsNullOrEmpty str1 then
-        str2
-    else
-        str1
-
 type DeckBuilder() =
     (* ... *)
 
@@ -187,23 +183,22 @@ type DeckBuilder() =
     member inline _.Combine(newProp: DeckProperty, previousProps: DeckProperty list) =
         newProp :: previousProps
 
-    (* ... *)
-        
     member inline x.Run(props: DeckProperty list) =
         props
         |> List.fold
-            (fun acc prop ->
-                let itemDeck = x.Run(prop)
-
-                { Title = firstDefined acc.Title itemDeck.Title
-                  Slides = acc.Slides @ itemDeck.Slides })
+            (fun deck prop ->
+                match prop with
+                | DeckProperty.Title title -> { deck with Title = title }
+                | DeckProperty.Slide slide -> { deck with Slides = slide :: deck.Slides })
             { Title = ""; Slides = [] }
+
+    member inline x.Run(prop: DeckProperty) = x.Run([prop])
 ```
 
 It might look like a bunch of changes but it's easier than it looks. We've just:
 - Changed the `Delay` method to return a list given one single property and also to support functions that return lists, in which case we simply return the result.
 - Changed the `Combine` method to take a list as the second parameter, so that we can accept all the previous properties that were added in the deck. That way we can append the new one to all the previous props.
-- Created a new `Run` method that takes a list instead of a single property, and uses the previously defined one to fold the list of properties into one single deck. This is the method that will get called when the expression finishes, so that we don't have to do the folding later on.
+- Created a new `Run` method that takes a list instead of a single property, and folds the list of properties into one single deck. This is the method that will get called when the expression finishes, so that we don't have to do the folding later on. We've also changed the implementation of the original `Run` to call the list overload, in case we get a single property, by wrapping the property under a list.
 
 You might be thinking now "does he not know that appending means putting the value at the end of the list and :: definitely does not do that?". Yes, I do! However keep in mind that expressions are evaluated from the bottom up, which means that we'll be combining the last value _first_ and only afterwards the rest, so that's why pre-pending values actually appends them to the end of the list in the end.
 
@@ -216,11 +211,11 @@ So let's do that now!
 ```fsharp
 type DeckBuilder() =
     (* ... *)
-    member inline _.For(prop: DeckProperty, f: unit -> DeckProperty list) =
-      prop :: f()
+    member inline x.For(prop: DeckProperty, f: unit -> DeckProperty list) =
+        x.Combine(prop, f())
 ```
 
-In the docs they specify that the signature for `For` is `seq<'T> * ('T -> M<'U>) -> seq<M<'U>>`, however that does not force us to specify the first argument as a sequence, it could be any "wrapped type" of T and since in our case we just have one property and we want to combine it with any function that returns a list of decks, we can just use a single property. As with `Combine`, keep in mind that expressions are evaluated from the bottom up, which is why we can prepend the new value to the previous ones.
+In the docs they specify that the signature for `For` is `seq<'T> * ('T -> M<'U>) -> seq<M<'U>>`, however that does not force us to specify the first argument as a sequence, it could be any "wrapped type" of T and since in our case we just have one property and we want to combine it with any function that returns a list of decks, we can just use a single property. This signature we've added is exactly the same as our `Combine` method but taking a function as the last parameter, so we can just call `Combine` and evaluate the function immediately.
 
 And would you look at that, it works!
 
@@ -362,7 +357,7 @@ We obviously have a couple of holes to fill in our implementation, so let's do t
 
 ## Keyboard navigation
 
-Let's start by just displaying a mocked slide that will display its index so that we can get navigation working and then we can worry about actually displaying what the user chose. We'll assign the component the _slide-x_ ID so that FuncUI can [properly detect changes between the slides](https://funcui.avaloniaui.net/components/component-lifetime#component-identity-key):
+Let's start by just displaying a mocked slide that will display its index so that we can get navigation working and then we can worry about actually displaying what the user chose. We'll assign the component the _slide-x_ ID so that FuncUI can [properly detect changes between the different views](https://funcui.avaloniaui.net/components/component-lifetime#component-identity-key):
 
 ```fsharp
 let private slide (index: int) slide =
@@ -455,3 +450,169 @@ let private slide (index: int) slide =
 And there we go, it works!
 
 ![A video recording of the app showing three slides that read "SharpPoint: Presentations made sharper" as the title, "This is the first slide", "...Wow, this is the second" and "NO WAY, a third?!"](/blog/img/ce-in-fsharp/slides-app.gif)
+
+# Adding more stuff!
+
+Of course only supporting titles and headers would make for very boring presentations, so let's spicy everything up a bit by adding support for text and images inside of slides. Starting, of course, by modifying our domain:
+
+```fsharp
+type SlideContent =
+    | Text of text: string
+    | Image of url: string
+
+type Slide = { Header: string; Content: SlideContent list }
+```
+
+This basically defines a new _slide content_ which can be any text or a remote image. Let's go over supporting this in our DSL now.
+
+Unfortunately we didn't make our slide DSL very easy to expand because the `header` property already returns a pre-made slide. Let's fix this by following the same pattern we did to create the deck DSL and make each individual operation return a property that we'll merge together later inside of the `Run` method.
+
+```fsharp
+[<RequireQualifiedAccess>]
+type SlideProperty =
+    | Header of header: string
+    | Content of content: SlideContent
+
+type SlideBuilder() =
+    member inline _.Yield(()) = ()
+    
+    member inline x.Run(props: SlideProperty list) =
+        props
+        |> List.fold
+            (fun slide prop ->
+                match prop with
+                | SlideProperty.Header header -> { slide with Header = header }
+                | SlideProperty.Content content -> { slide with Content = content :: slide.Content })
+            { Header = ""; Content = [] }
+            
+    [<CustomOperation("header")>]
+    member inline _.Header((), header: string) = [ SlideProperty.Header header ]
+
+    [<CustomOperation("text")>]
+    member inline _.Text(prev: SlideProperty list, text: string) =
+        (Text text |> SlideProperty.Content) :: prev
+    
+    [<CustomOperation("image")>]
+    member inline _.Image(prev: SlideProperty list, url: string) =
+        (Image url |> SlideProperty.Content) :: prev
+```
+
+Good news is this one is much easier than the deck builder because we don't have to accept any external expressions, only custom operations, so we don't need to implement `Delay`, `Combine` or `For`. We simply define two extra custom operations that take the previous declared properties and pre-pends the new content. Then, in the `Run` method, we fold the properties similarly to how we did it in the deck builder to create our domain slide type.
+
+## Supporting the new properties in the UI
+
+Now to support this into the UI, we need to modify the slide component that we created earlier. Since the content of a slide is a list, let's map each type of content into an Avalonia view and yield it back into the StackPanel's children. For the text, it's really easy:
+
+```fsharp
+let private slide (index: int) slide =
+    Component.create(
+        $"slide-{index}",
+        fun _ ->
+            StackPanel.create [
+               StackPanel.children [
+                   (* ... *)
+                       
+                   yield!
+                        slide.Content
+                        |> List.map (fun content ->
+                            match content with
+                            | Text text ->
+                                TextBlock.create [
+                                    TextBlock.fontSize 24
+                                    TextBlock.text text
+                                ] :> IView
+                            | Image url ->
+                                image url
+                        )
+               ]
+            ]
+    ) :> IView
+```
+
+For the image we'll need a bit more ceremony. First, let's steal one of the custom hooks defined in the [Avalonia FuncUI's examples](https://github.com/fsprojects/Avalonia.FuncUI/blob/master/src/Examples/Component%20Examples/Examples.ContactBook/Views.fs#L20) to deal with async code a bit more easily. This will basically wrap an async block, execute it right after the component is created and expose the async deferred status. Next, we will define the actual function to fetch an image and transform it into a Bitmap that Avalonia can display and finally we'll consume all this in a component that runs the initial hook and displays a loader when the async hook reports _pending_, an error when it fails and display the actual image when it finishes resolving:
+
+```fsharp
+type Deferred<'t> =
+    | NotStartedYet
+    | Pending
+    | Resolved of 't
+    | Failed of exn
+
+type IComponentContext with
+
+    member this.useAsync<'signal>(init: Async<'signal>) : IWritable<Deferred<'signal>> =
+        let state = this.useState (Deferred.NotStartedYet, true)
+
+        this.useEffect (
+            handler = (fun _ ->
+                match state.Current with
+                | Deferred.NotStartedYet ->
+                    state.Set Deferred.Pending
+
+                    Async.StartImmediate (
+                        async {
+                            let! result = Async.Catch init
+
+                            match result with
+                            | Choice1Of2 value -> state.Set (Deferred.Resolved value)
+                            | Choice2Of2 exn -> state.Set (Deferred.Failed exn)
+                        }
+                    )
+
+                | _ ->
+                    ()
+            ),
+            triggers = [ EffectTrigger.AfterInit ]
+        )
+
+        state
+
+let loadImage (url: string) =
+    async {
+        use httpClient = new HttpClient()
+        let! bytes =
+            url
+            |> httpClient.GetByteArrayAsync
+            |> Async.AwaitTask
+
+        use stream = new MemoryStream(bytes)
+        return new Bitmap(stream)
+    }
+
+let private image url =
+    Component.create (
+        $"image-{url}",
+        fun ctx ->
+            let image =
+                loadImage url
+                |> ctx.useAsync
+                
+            match image.Current with
+            | Deferred.Resolved bitmap ->
+                Image.create [
+                    Image.source bitmap
+                    Image.maxHeight 300
+                ]
+            | Deferred.Failed e ->
+                TextBlock.create [
+                    TextBlock.text $"{e.Message}"
+                    TextBlock.foreground Brushes.Red
+                ]
+            | Deferred.Pending | Deferred.NotStartedYet ->
+                ProgressBar.create [
+                    ProgressBar.isEnabled true
+                    ProgressBar.isIndeterminate true
+                ]
+    )
+```
+
+And behold, our little presentation DSL is ready to be used!
+![A video recording of the app showing the final app with text support and image loading"](/blog/img/ce-in-fsharp/final-app.gif)
+
+# Final words
+
+Well, that was quite a ride! I definitely did not expect to have as much fun as I ended up having. There's of course still tons of things that we could support: displaying code, GIF images, layout support... but we'll leave all that for the future. For now, I hope this post will make you consider using CEs for your next DSL!
+
+As I mentioned above, the entire code is in a separate repo, so if you want to check it out you can do so here:
+
+[SharpPoint repo](https://github.com/sleepyfran/sharp-point)
