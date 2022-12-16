@@ -11,15 +11,13 @@ draft = true
 
 > This article is part of the 2022 F# Advent Calendar. Go check out the other awesome posts that are part of it [here](https://sergeytihon.com/2022/10/28/f-advent-calendar-in-english-2022/)!
 
-Computation expressions (CEs from now on) are those things that sound so scary when you hear the name and even more scary when you see the definition on the official documentation:
+As a user of F# I've been using lots of `seq { }` and `async { }` computation expressions, however I never really wrote my own. Lately I've been getting more and more into making DSLs and I found CEs to be an absolutely god-send for this. They can make the code really succinct and can help you turn messy code into a neat list of instructions that is easy to follow.
 
-> Computation expressions in F# provide a convenient syntax for writing computations that can be sequenced and combined using control flow constructs and bindings. Depending on the kind of computation expression, they can be thought of as a way to express monads, monoids, monad transformers, and applicative functors.
-
-But once you get the hang of it, it could be a wonderful way to explore the many different ways by which you can create DSL or Domain Specific Languages in F#. In this post I'll go (in a somehow chaotic manner) over some of the nicest DSL I've found so far in F# and we'll create our own that, inspired by [DeckUI](https://github.com/joshdholtz/DeckUI), will kick an [Avalonia](https://avaloniaui.net/) application that shows a presentation.
+So I thought that in this post we can make together a DSL that, inspired by [DeckUI](https://github.com/joshdholtz/DeckUI), will kick an [Avalonia](https://avaloniaui.net/) application which shows a presentation.
 
 # First, some prior art
 
-There's already quite a few really nice examples of DSL that use CEs, the one that immediately comes to mind is [FSHttp](https://github.com/fsprojects/FSHttp), which uses CEs to declare HTTP requests:
+There's already quite a few really nice examples of DSL that use CEs, the one that immediately comes to mind is [FSHttp](https://github.com/fsprojects/FSHttp), which uses CEs to declare HTTP requests that are really easy to interpret:
 
 ```fsharp
 http {
