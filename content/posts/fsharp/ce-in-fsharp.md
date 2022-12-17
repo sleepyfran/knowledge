@@ -1,12 +1,11 @@
 +++
 title = "Creating DSLs using F#'s Computation Expressions"
-date = "2022-12-06T20:15:21.512Z"
+date = "2022-12-17T00:00:00.512Z"
 author = "sleepyfran"
 authorTwitter = "sleepyfran"
 cover = ""
 tags = [ "fsharp", "computation expressions" ]
 showFullContent = false
-draft = true
 +++
 
 > This article is part of the 2022 F# Advent Calendar. Go check out the other awesome posts that are part of it [here](https://sergeytihon.com/2022/10/28/f-advent-calendar-in-english-2022/)!
@@ -17,7 +16,7 @@ So I thought that in this post we can make together a DSL that, inspired by [Dec
 
 # First, some prior art
 
-There's already quite a few really nice examples of DSL that use CEs, the one that immediately comes to mind is [FSHttp](https://github.com/fsprojects/FSHttp), which uses CEs to declare HTTP requests that are really easy to interpret:
+There's already quite a few really nice examples of DSL that use CEs outside of the ones in the core library, the one that immediately comes to mind is [FSHttp](https://github.com/fsprojects/FSHttp), which uses CEs to declare HTTP requests that are really easy to interpret:
 
 ```fsharp
 http {
@@ -67,7 +66,7 @@ type Slide = { Header: string }
 type Deck = { Title: string; Slides: Slide list }
 ```
 
-We'll start by defining simple types that we can expand upon later. We'll start by just supporting a header in the slides, but we can always expand it later. For the deck, we'll have a title field which will be the initial view displayed once we load the deck into the program, and a list of slides as defined above..
+We'll start by defining simple types that we can expand upon later. We'll start by just supporting a header in the slides, later on we can add content to it as well. For the deck, we'll have a title field which will be the initial view displayed once we load the deck into the program, and a list of slides as defined above.
 
 # Implementing our DSL
 
@@ -110,7 +109,7 @@ type DeckBuilder() =
 let deck = DeckBuilder()
 ```
 
-We will start by defining a `DeckProperty` union type which will hold all the different content that a deck can accept. So far we only accept a title, so a simple case of a string is all we need for now. We then define a yield that takes a unit and returns a unit, just like in the previous expression. The `title` custom operation simply produces a value of `Title` with the given string and then all that's left is defining a `Run` method that takes a prop and produces our domain Deck type, since this is the method that will be run right after our expression finishes, so we can use it to transform the property into our domain record.
+We will start by defining a `DeckProperty` union type which will hold all the different content that a deck can accept. So far we only accept a title, but we'll be accepting slides as well pretty soon so a union case is a better idea than directly translating to our domain record. We then define a yield that takes a unit and returns a unit, just like in the previous expression. The `title` custom operation simply produces a value of `Title` with the given string and then all that's left is defining a `Run` method that takes a prop and produces our domain Deck type, since this is the method that will be run right after our expression finishes, so we can use it to transform the property into our domain record.
 
 Cool! Trying out our expression so far produces a Deck type with no slides and "Test Deck" as the title:
 
