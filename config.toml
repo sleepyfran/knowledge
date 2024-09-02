@@ -1,8 +1,0 @@
-baseURL = 'https://sleepyfran.github.io/blog'
-languageCode = 'en-us'
-title = "sleepyfran's blog"
-theme = 'terminal'
-
-[params]
-  contentTypeName = "posts"
-  themeColor = "ruber"
